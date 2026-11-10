@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 'use strict';
 
-// Supports basic arithmetic, modulo (%), exponentiation (^), and square roots.
+// Supports basic arithmetic, modulo (%), exponentiation (^), square roots, and logarithms.
 function calculate(operation, left, right) {
-  const isSquareRoot = operation === 'sqrt' || operation === '√';
-  if (!Number.isFinite(left) || (!isSquareRoot && !Number.isFinite(right))) {
+  const isUnaryOperation = ['sqrt', '√', 'log'].includes(operation);
+  if (!Number.isFinite(left)) {
+    throw new Error(isUnaryOperation ? 'Operand must be a finite number.' : 'Both operands must be finite numbers.');
+  }
+  if (!isUnaryOperation && !Number.isFinite(right)) {
     throw new Error('Both operands must be finite numbers.');
   }
 
@@ -44,16 +47,22 @@ function calculate(operation, left, right) {
         throw new Error('Cannot take the square root of a negative number.');
       }
       return Math.sqrt(left);
+    case 'log':
+      if (left <= 0) {
+        throw new Error('Cannot calculate the logarithm of a non-positive number.');
+      }
+      return Math.log(left);
     default:
-      throw new Error('Unsupported operation. Use add, subtract, multiply, divide, modulo, power, or sqrt.');
+      throw new Error('Unsupported operation. Use add, subtract, multiply, divide, modulo, power, sqrt, or log.');
   }
 }
 
 const usage = [
   'Usage: node src\\calculator.js <operation> <number> [number]',
-  'Operations: add (+), subtract (-), multiply (*), divide (/), modulo (%), power (^), sqrt (√)',
+  'Operations: add (+), subtract (-), multiply (*), divide (/), modulo (%), power (^), sqrt (√), log',
   'Example: node src\\calculator.js add 2 3',
   'Example: node src\\calculator.js sqrt 16',
+  'Example: node src\\calculator.js log 10',
   'Quote "*" when using the multiplication symbol in a shell.',
 ].join('\n');
 
@@ -64,14 +73,14 @@ if (require.main === module) {
     console.log(usage);
   } else {
     try {
-      const isSquareRoot = args[0] === 'sqrt' || args[0] === '√';
-      if (args.length !== (isSquareRoot ? 2 : 3)) {
+      const isUnaryOperation = ['sqrt', '√', 'log'].includes(args[0]);
+      if (args.length !== (isUnaryOperation ? 2 : 3)) {
         throw new Error(usage);
       }
 
       const [operation, left, right] = args;
-      if (left.trim() === '' || (!isSquareRoot && right.trim() === '')) {
-        throw new Error('Both operands must be finite numbers.');
+      if (left.trim() === '' || (!isUnaryOperation && right.trim() === '')) {
+        throw new Error(isUnaryOperation ? 'Operand must be a finite number.' : 'Both operands must be finite numbers.');
       }
 
       console.log(calculate(operation, Number(left), right === undefined ? undefined : Number(right)));
